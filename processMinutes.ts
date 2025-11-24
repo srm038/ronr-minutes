@@ -3,21 +3,46 @@ import remarkFrontmatter from "remark-frontmatter";
 import remarkParse from "remark-parse";
 import { unified } from "unified";
 
-interface ProcessMinutesProps {
+interface LoadMarkdownProps {
   file: string;
 }
 
-export const processMinutes = async ({ file }: ProcessMinutesProps) => {
+export const loadMarkdown = async ({ file }: LoadMarkdownProps) => {
   let markdown = await Bun.file(file).text();
-  console.log({ markdown });
-  let ast = await unified()
-    .use(remarkParse)
-    .use(remarkFrontmatter)
-    .parse(markdown);
-  console.info(JSON.stringify(ast, null, 4));
+  let ast = unified().use(remarkParse).use(remarkFrontmatter).parse(markdown);
+  return ast;
+};
 
+interface ProcessMinutesProps {
+  markdown: any;
+}
+
+export const processMinutes = async ({
+  markdown,
+}: ProcessMinutesProps): Promise<string> => {
   let tex = "";
 
+  switch (markdown.type) {
+    case "text": {
+      let match = new RegExp(/^(.*?): (.*)/).exec(markdown.value);
+      if (match?.[0]) {
+        return `${tex}\\item\\textbf{${match[1]}:} ${match[2]}`;
+      }
+      break;
+    }
+    case "list": {
+      tex = `${tex}\\begin{enumerate}`;
+      for (const child of markdown.children) {
+        tex = `${tex}${await processMinutes({ markdown: child })}`;
+      }
+      return `${tex}\\end{enumerate}`;
+    }
+
+    default:
+      for (const child of markdown.children) {
+        return `${tex}${await processMinutes({ markdown: child })}`;
+      }
+  }
   return tex;
 };
 
