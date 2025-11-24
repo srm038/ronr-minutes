@@ -1,7 +1,9 @@
-import { processMinutes, saveTex } from "./processMinutes";
+import { loadMarkdown, processMinutes, saveTex } from "./processMinutes";
 
-const minutes = process.argv[2];
+const file = process.argv[2] || "";
 
-let tex = await processMinutes(minutes);
+const markdown = await loadMarkdown({ file });
 
-await saveTex(minutes, tex);
+let tex = await processMinutes({ markdown });
+
+await saveTex({ file, tex });

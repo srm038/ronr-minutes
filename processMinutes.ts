@@ -22,13 +22,19 @@ export const processMinutes = async ({
 }: ProcessMinutesProps): Promise<string> => {
   let tex = "";
 
+  if (!markdown) return tex;
+
+  console.log(JSON.stringify(markdown, null, 2));
+
   switch (markdown.type) {
+    case "yaml":
+      return tex;
     case "text": {
       let match = new RegExp(/^(.*?): (.*)/).exec(markdown.value);
-      if (match?.[0]) {
+      if (match) {
         return `${tex}\\item\\textbf{${match[1]}:} ${match[2]}`;
       }
-      break;
+      return tex;
     }
     case "list": {
       tex = `${tex}\\begin{enumerate}`;
@@ -37,13 +43,12 @@ export const processMinutes = async ({
       }
       return `${tex}\\end{enumerate}`;
     }
-
     default:
       for (const child of markdown.children) {
-        return `${tex}${await processMinutes({ markdown: child })}`;
+        tex = `${tex}${await processMinutes({ markdown: child })}`;
       }
+      return tex;
   }
-  return tex;
 };
 
 interface SaveTexProps {
