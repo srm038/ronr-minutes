@@ -1,7 +1,10 @@
+import { YAML } from "bun";
 import { remark } from "remark";
 import remarkFrontmatter from "remark-frontmatter";
 import remarkParse from "remark-parse";
+import remarkParseYAML from "remark-parse-yaml";
 import { unified } from "unified";
+import * as z from "zod";
 
 interface LoadMarkdownProps {
   file: string;
@@ -12,6 +15,13 @@ export const loadMarkdown = async ({ file }: LoadMarkdownProps) => {
   let ast = unified().use(remarkParse).use(remarkFrontmatter).parse(markdown);
   return ast;
 };
+
+const FrontMatter = z.object({
+  date: z.string().transform((val) => new Date(val)),
+  present: z.array(z.string()),
+  absent: z.array(z.string()).optional(),
+  version: z.string().regex(/^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/),
+});
 
 interface ProcessMinutesProps {
   markdown: any;
@@ -24,10 +34,14 @@ export const processMinutes = async ({
 
   if (!markdown) return tex;
 
-  console.log(JSON.stringify(markdown, null, 2));
+  // console.log(JSON.stringify(markdown, null, 2));
 
   switch (markdown.type) {
     case "yaml":
+      // console.log(JSON.stringify(markdown, null, 2));
+      let yaml = YAML.parse(markdown.value);
+      let data = FrontMatter.parse(yaml);
+      console.log(data);
       return tex;
     case "text": {
       let match = new RegExp(/^(.*?): (.*)/).exec(markdown.value);
