@@ -10,6 +10,7 @@
     "typescript": "^5"
   },
   "dependencies": {
+    "date-fns": "^4.1.0",
     "remark-frontmatter": "^5.0.0",
     "remark-parse": "^11.0.0",
     "unified": "^11.0.5",

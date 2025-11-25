@@ -1,0 +1,45 @@
+% !TeX program = xelatex
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+
+\usepackage{graphicx,xspace}
+\usepackage{fontspec}
+
+\pagestyle{plain}
+\setlength{\parskip}{\baselineskip}
+\raggedright
+\widowpenalty10000
+\clubpenalty10000
+
+\usepackage{multirow,bigdelim}
+
+\newcounter{motion}
+\stepcounter{motion}
+
+\newcommand\vote[2]{
+  \hfill\textbf{#1} \emph{#2}
+}
+
+\newcommand\motion[3]{
+  \textbf{Motion \#\themotion}\xspace#1\vote{#2}{#3}
+  \stepcounter{motion}
+}
+
+\begin{document}
+
+\begin{minipage}{0.75\textwidth}\vspace{0pt}
+  {\Large Missions Committee\par}
+
+  {\large Minutes}
+\end{minipage}
+\hfill
+
+\begin{tabular}{@{}ll}
+  \textbf{Date:} & %DATE%\\
+  \textbf{Time:} & %TIME%
+\end{tabular}
+
+%CONTENT%
+
+\end{document}

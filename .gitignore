@@ -5,6 +5,7 @@ node_modules
 out
 dist
 *.tgz
+*.pdf
 
 # code coverage
 coverage
@@ -14,6 +15,7 @@ coverage
 logs
 _.log
 report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
+*.log
 
 # dotenv environment variable files
 .env
@@ -36,3 +38,4 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 # test files
 *.md
 *.tex
+*.aux

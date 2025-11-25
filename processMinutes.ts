@@ -1,4 +1,5 @@
 import { YAML } from "bun";
+import { format } from "date-fns";
 import { remark } from "remark";
 import remarkFrontmatter from "remark-frontmatter";
 import remarkParse from "remark-parse";
@@ -19,13 +20,21 @@ export const loadMarkdown = async ({ file }: LoadMarkdownProps) => {
 const FrontMatter = z.object({
   date: z.string().transform((val) => new Date(val)),
   present: z.array(z.string()),
-  absent: z.array(z.string()).optional(),
+  absent: z.array(z.string().regex(/(\w*?) (\w*?)/)).optional(),
   version: z.string().regex(/^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/),
 });
 
 interface ProcessMinutesProps {
   markdown: any;
 }
+
+export const getMetadata = ({
+  markdown,
+}: ProcessMinutesProps): z.infer<typeof FrontMatter> => {
+  const yaml = YAML.parse(markdown.value);
+  const data = FrontMatter.parse(yaml);
+  return data;
+};
 
 export const processMinutes = async ({
   markdown,
@@ -34,21 +43,24 @@ export const processMinutes = async ({
 
   if (!markdown) return tex;
 
-  // console.log(JSON.stringify(markdown, null, 2));
-
   switch (markdown.type) {
-    case "yaml":
-      // console.log(JSON.stringify(markdown, null, 2));
-      let yaml = YAML.parse(markdown.value);
-      let data = FrontMatter.parse(yaml);
+    case "yaml": {
+      const data = getMetadata({ markdown });
       console.log(data);
-      return tex;
-    case "text": {
-      let match = new RegExp(/^(.*?): (.*)/).exec(markdown.value);
-      if (match) {
-        return `${tex}\\item\\textbf{${match[1]}:} ${match[2]}`;
+      for (const attendee of [...data.present, ...(data?.absent || [])].sort(
+        (a, b) => a.split(" ")[1]!.localeCompare(b.split(" ")[1]!),
+      )) {
+        tex = `${tex}${attendee} (${data.present.includes(attendee) ? "present" : "absent"})\n\n`;
       }
       return tex;
+    }
+    case "text": {
+      let match = new RegExp(/^([\w ]+?): (.*)/).exec(markdown.value);
+      if (match) {
+        return `${tex}\\item\\textbf{${match[1]}:} ${match[2]}`;
+      } else {
+        return `${tex}\\item ${markdown.value}`;
+      }
     }
     case "list": {
       tex = `${tex}\\begin{enumerate}`;
@@ -71,5 +83,11 @@ interface SaveTexProps {
 }
 
 export const saveTex = async ({ file, tex }: SaveTexProps) => {
+  const markdown = await loadMarkdown({ file });
+  const metadata = getMetadata({ markdown: markdown.children[0] });
+  let template = await Bun.file("template.tex").text();
+  template = template.replace(/%DATE%/, format(metadata.date, "PPP"));
+  template = template.replace(/%TIME%/, format(metadata.date, "p"));
+  tex = template.replace(/%CONTENT%/, tex).replaceAll(/\$/g, "\\$");
   await Bun.write(`${file.slice(0, -3)}.tex`, tex);
 };
