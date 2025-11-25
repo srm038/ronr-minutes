@@ -18,6 +18,7 @@ export const loadMarkdown = async ({ file }: LoadMarkdownProps) => {
 };
 
 const FrontMatter = z.object({
+  title: z.string(),
   date: z.string().transform((val) => new Date(val)),
   present: z.array(z.string()),
   absent: z.array(z.string().regex(/(\w*?) (\w*?)/)).optional(),
@@ -86,8 +87,13 @@ export const saveTex = async ({ file, tex }: SaveTexProps) => {
   const markdown = await loadMarkdown({ file });
   const metadata = getMetadata({ markdown: markdown.children[0] });
   let template = await Bun.file("template.tex").text();
-  template = template.replace(/%DATE%/, format(metadata.date, "PPP"));
-  template = template.replace(/%TIME%/, format(metadata.date, "p"));
-  tex = template.replace(/%CONTENT%/, tex).replaceAll(/\$/g, "\\$");
+  tex = template
+    .replace(/%DATE%/, format(metadata.date, "PPP"))
+    .replace(/%TIME%/, format(metadata.date, "p"))
+    .replace(/%CONTENT%/, tex)
+    .replaceAll(/\$/g, "\\$")
+    .replace(/%VERSION%/, metadata.version)
+    .replace(/%TITLE%/, metadata.title)
+    .replace(/%SUBTITLE%/, metadata.subtitle);
   await Bun.write(`${file.slice(0, -3)}.tex`, tex);
 };
