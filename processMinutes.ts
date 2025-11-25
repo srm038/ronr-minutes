@@ -54,32 +54,32 @@ export const processMinutes = async ({
       )) {
         tex = `${tex}${attendee} (${data.present.includes(attendee) ? "present" : "absent"})\\\\`;
       }
-      return `${tex}\\end{multicols}`;
+      return `${tex}\\end{multicols}\n\n`;
     }
     case "text": {
       let match = new RegExp(/^([\w ]+?): (.*)$/).exec(markdown.value);
       if (match) {
         switch (match[1]) {
           case "Motion": {
-            return `${tex}\\\\\\motion{${match[2]}}`;
+            return `${tex}\\item\\motion{${match[2]}}\n\n`;
           }
           case "Vote": {
-            return `${tex}\\vote{${match[2]?.split(" ")[0]}}{${match[2]?.split(" ")[1]}}`;
+            return `${tex}\\item[]\\vote{${match[2]?.split(" ")[0]}}{${match[2]?.split(" ")[1]}}\n\n`;
           }
           default:
-            tex = `${tex}\\item\\textbf{${match[1]}:} ${match[2]}`;
+            tex = `${tex}\\item\\textbf{${match[1]}:} ${match[2]}\n\n`;
             return tex;
         }
       } else {
-        return `${tex}\\item ${markdown.value}`;
+        return `${tex}\\item ${markdown.value}\n\n`;
       }
     }
     case "list": {
-      tex = `${tex}\\begin{enumerate}`;
+      tex = `${tex}\\begin{enumerate}\n\n`;
       for (const child of markdown.children) {
         tex = `${tex}${await processMinutes({ markdown: child })}`;
       }
-      return `${tex}\\end{enumerate}`;
+      return `${tex}\\end{enumerate}\n\n`;
     }
     default:
       for (const child of markdown.children) {
