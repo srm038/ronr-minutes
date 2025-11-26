@@ -1,9 +1,7 @@
-import { SHA512_256, YAML } from "bun";
+import { YAML } from "bun";
 import { format } from "date-fns";
-import { remark } from "remark";
 import remarkFrontmatter from "remark-frontmatter";
 import remarkParse from "remark-parse";
-import remarkParseYAML from "remark-parse-yaml";
 import { unified } from "unified";
 import * as z from "zod";
 
