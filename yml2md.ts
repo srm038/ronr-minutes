@@ -19,12 +19,22 @@ const md = (s: string) => {
 const renderCeremony = (c: any) =>
   [c.by, c.description].filter(Boolean).join(" ");
 
+const fmtDate = (s: string) => {
+  const parts = s.split("T")[0]!.split("-").map(Number);
+  return new Date(parts[0]!, parts[1]! - 1, parts[2]!).toLocaleDateString(
+    "en-US",
+    { month: "long", day: "numeric", year: "numeric" },
+  );
+};
+
 // Header
 md(`# ${m.title}`);
-if (isAgenda) md("**AGENDA**");
-md(
-  `**Date:** ${m.date}${m.status ? `  |  **Status:** ${m.status}` : ""}  |  **Type:** ${m.meeting_type}`,
-);
+if (isAgenda) {
+  md(`**AGENDA**${m.status ? ` (*${m.status.toLowerCase()}*)` : ""}`);
+} else {
+  md(`**MINUTES**${m.status ? ` (*${m.status.toLowerCase()}*)` : ""}`);
+}
+md(`**Date:** ${fmtDate(m.date)} (${m.meeting_type})`);
 
 // Opening
 if (isAgenda) {
@@ -72,7 +82,7 @@ if (m.roll_call) {
 // Minutes Approval
 if (m.minutes_approval) {
   const a = m.minutes_approval;
-  let line = `Minutes of **${a.date}**`;
+  let line = `Minutes of **${fmtDate(a.date)}**`;
   if (isAgenda) {
     line += ` to be approved.`;
   } else {
@@ -171,7 +181,7 @@ if (m.announcements?.length) {
 // Attestation
 if (m.attestation) {
   md(
-    `---\n\n**Attested by:** ${m.attestation.secretary}\n\n**Date Approved:** ${m.attestation.date_approved}`,
+    `---\n\n**Attested by:** ${m.attestation.secretary}\n\n**Date Approved:** ${fmtDate(m.attestation.date_approved)}`,
   );
 }
 
@@ -212,7 +222,8 @@ function renderMotions(motions: any[], indent = ""): string {
       if (mot.disposition) {
         line += ` ${mot.disposition}`;
         if (mot.referred_to) line += ` (referred to ${mot.referred_to})`;
-        if (mot.postponed_to) line += ` (postponed to ${mot.postponed_to})`;
+        if (mot.postponed_to)
+          line += ` (postponed to ${fmtDate(mot.postponed_to)})`;
         if (mot.corrections?.length) line += `: ${mot.corrections.join(", ")}`;
       }
 
