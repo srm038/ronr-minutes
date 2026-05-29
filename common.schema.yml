@@ -110,6 +110,24 @@ definitions:
         type: boolean
         description: Whether the amendment was seconded
 
+  minutes_approval:
+    type: object
+    description: Approval of previous meeting's minutes
+    required:
+      - date
+    properties:
+      date:
+        type: string
+        format: date
+        description: Date of the meeting whose minutes were approved
+      motion:
+        type: object
+        properties:
+          by:
+            type: string
+            description: Member who moved approval
+          seconded:
+            type: boolean
   election:
     type: object
     description: An election without results

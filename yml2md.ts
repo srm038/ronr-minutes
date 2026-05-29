@@ -71,12 +71,14 @@ if (m.roll_call) {
 
 // Minutes Approval
 if (m.minutes_approval) {
-  md(`## Minutes Approval`);
   const a = m.minutes_approval;
-  let line = `Minutes of **${a.of_meeting_date}** were **${a.result}**.`;
-  if (a.corrections?.length) {
-    line += ` Corrections: ${a.corrections.join(", ")}.`;
+  let line = `Minutes of **${a.date}**`;
+  if (isAgenda) {
+    line += ` to be approved.`;
+  } else {
+    line += ` were **${a.result}**.`;
   }
+  if (a.corrections) line += ` Corrections: ${a.corrections}.`;
   if (a.motion) {
     line += ` Motion by ${a.motion.by}${a.motion.seconded ? ", *seconded*" : ""}.`;
   }

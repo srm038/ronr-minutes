@@ -81,42 +81,35 @@ properties:
         description: Whether a quorum was present
         default: true
   minutes_approval:
-    type: object
-    description: Reading and approval of previous meeting's minutes per RONR §41
-    properties:
-      of_meeting_date:
-        type: string
-        format: date
-        description: Date of the meeting whose minutes were approved
-      motion:
-        type: object
-        properties:
-          by:
-            type: string
-            description: Member who moved approval
-          seconded:
-            type: boolean
-            description: Whether the motion was seconded
-          vote:
-            $ref: "#/definitions/vote"
+    allOf:
+      - $ref: common.schema.yml#/definitions/minutes_approval
+      - type: object
         required:
-          - by
-      corrections:
-        type: string
-        description: Summary of any corrections made before approval
-      result:
-        type: string
-        enum:
-          - Approved
-          - Approved as Corrected
-        description: Result of approval vote
-    if:
-      properties:
-        result:
-          const: Approved as Corrected
-    then:
-      required:
-        - corrections
+          - result
+        properties:
+          result:
+            type: string
+            enum:
+              - Approved
+              - Approved as Corrected
+          motion:
+            type: object
+            required:
+              - by
+          corrections:
+            type: string
+            description: Summary of any corrections made before approval
+        if:
+          properties:
+            result:
+              const: Approved as Corrected
+        then:
+          required:
+            - corrections
+        else:
+          not:
+            required:
+              - corrections
     else:
       not:
         required:
