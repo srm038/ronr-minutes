@@ -1,0 +1,570 @@
+$schema: http://json-schema.org/draft-07/schema#
+$id: https://example.com/ronr-minutes.schema.yaml
+title: RONR Minutes
+description: Meeting minutes conforming to Robert's Rules of Order (RONR)
+type: object
+required:
+  - title
+  - date
+  - status
+  - meeting_type
+  - calling_to_order
+  - adjournment
+properties:
+  title:
+    type: string
+    description: Name of the organization
+  date:
+    type: string
+    pattern: ^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2})?)?(Z|[+-]\d{2}:\d{2})?$
+    description: Date (YYYY-MM-DD) or ISO 8601 datetime of the meeting
+  status:
+    type: string
+    enum:
+      - Draft
+      - Approved
+    description: Minutes document status
+  meeting_type:
+    type: string
+    enum:
+      - Regular
+      - Special
+      - Annual
+      - Adjourned
+      - Executive Session
+    description: Type of meeting per RONR
+  location:
+    type: string
+    description: Physical or virtual location
+  calling_to_order:
+    type: object
+    description: Call to order per RONR §41
+    required:
+      - time
+      - by
+    properties:
+      time:
+        type: string
+        pattern: ^\d{1,2}:\d{2}(:\d{2})?(\s*[AP]M)?$
+        description: Time the meeting was called to order
+      by:
+        type: string
+        description: Person who called the meeting to order (presiding officer)
+      time_scheduled:
+        type: string
+        pattern: ^\d{1,2}:\d{2}(:\d{2})?(\s*[AP]M)?$
+        description: Scheduled start time (if different from actual)
+  opening_ceremonies:
+    type: array
+    description: Opening ceremonies e.g. prayer, pledge, invocation
+    items:
+      $ref: "#/definitions/ceremony"
+  closing_ceremonies:
+    type: array
+    description: Closing ceremonies before adjournment
+    items:
+      $ref: "#/definitions/ceremony"
+  roll_call:
+    type: object
+    description: Roll call of members per RONR §41
+    properties:
+      members_present:
+        type: array
+        items:
+          type: string
+        description: Names of members present
+      members_absent:
+        type: array
+        items:
+          type: string
+        description: Names of members absent
+      members_excused:
+        type: array
+        items:
+          type: string
+        description: Names of members excused (not standard RONR but common)
+      officers_present:
+        type: array
+        items:
+          type: object
+          required:
+            - name
+            - office
+          properties:
+            name:
+              type: string
+              description: Officer name
+            office:
+              type: string
+              description: Office held
+        description: Officers in attendance
+      guests:
+        type: array
+        items:
+          type: string
+        description: Non-member guests or presenters
+      quorum:
+        type: boolean
+        description: Whether a quorum was present
+        default: true
+  minutes_approval:
+    type: object
+    description: Reading and approval of previous meeting's minutes per RONR §41
+    properties:
+      of_meeting_date:
+        type: string
+        format: date
+        description: Date of the meeting whose minutes were approved
+      motion:
+        type: object
+        properties:
+          by:
+            type: string
+            description: Member who moved approval
+          vote:
+            $ref: "#/definitions/vote"
+        required:
+          - by
+      corrections:
+        type: string
+        description: Summary of any corrections made before approval
+      result:
+        type: string
+        enum:
+          - Approved
+          - Approved as Corrected
+        description: Result of approval vote
+    if:
+      properties:
+        result:
+          const: Approved as Corrected
+    then:
+      required:
+        - corrections
+    else:
+      not:
+        required:
+          - corrections
+  reports:
+    type: array
+    description: Reports of officers, boards, and committees per RONR §41
+    items:
+      type: object
+      required:
+        - title
+        - by
+      properties:
+        title:
+          type: string
+          description: Report title
+        by:
+          type: string
+          description: Person or body presenting the report
+        type:
+          type: string
+          enum:
+            - Officer
+            - Board
+            - Standing Committee
+            - Ad Hoc Committee
+            - Special
+          description: Type of report
+        content:
+          type: string
+          description: Summary of the report (what was done, not what was said per RONR)
+        attached:
+          type: array
+          items:
+            type: string
+          description: Attached documents or references
+        actions:
+          type: array
+          description: Informational items or decisions (non-motion)
+          items:
+            type: string
+        motions:
+          type: array
+          description: Motions arising from this report
+          items:
+            $ref: "#/definitions/motion"
+  unfinished_business:
+    type: array
+    description: Unfinished business and general orders per RONR §41
+    items:
+      type: object
+      properties:
+        title:
+          type: string
+          description: Item title
+        description:
+          type: string
+          description: Description of the business
+        motions:
+          type: array
+          items:
+            $ref: "#/definitions/motion"
+  new_business:
+    type: array
+    description: New business per RONR §41
+    items:
+      type: object
+      properties:
+        title:
+          type: string
+          description: Item title
+        description:
+          type: string
+        motions:
+          type: array
+          description: Motions introduced under this item
+          items:
+            $ref: "#/definitions/motion"
+        elections:
+          type: array
+          description: Elections held (special case of new business)
+          items:
+            $ref: "#/definitions/election"
+  announcements:
+    type: array
+    description: Announcements or program
+    items:
+      type: string
+  adjournment:
+    type: object
+    description: Adjournment per RONR §41
+    required:
+      - time
+    properties:
+      time:
+        type: string
+        pattern: ^\d{1,2}:\d{2}(:\d{2})?(\s*[AP]M)?$
+        description: Time of adjournment
+      by:
+        type: string
+        description: Person who declared the meeting adjourned
+      next_meeting:
+        type: string
+        description: Date or description of the next meeting
+  attestation:
+    type: object
+    description: Secretary's attestation
+    properties:
+      secretary:
+        type: string
+        description: Name of the secretary
+      date_approved:
+        type: string
+        format: date
+        description: Date the minutes were approved
+      signed_by:
+        type: string
+        description: Person who signed the minutes
+definitions:
+  ceremony:
+    type: object
+    description: A ceremony or ritual item (prayer, pledge, invocation, etc.)
+    properties:
+      type:
+        type: string
+        description: Type of ceremony
+      by:
+        type: string
+        description: Person who led the ceremony
+      description:
+        type: string
+        description: Notes about the ceremony
+  vote:
+    type: object
+    description: A vote per RONR §44-46
+    properties:
+      method:
+        type: string
+        enum:
+          - Voice
+          - Show of Hands
+          - Rising
+          - Counted Division
+          - Roll Call
+          - Ballot
+          - Unanimous Consent
+        default: voice
+        description: Method of voting
+      yes:
+        type: integer
+        minimum: 0
+        description: Number of yes votes
+      no:
+        type: integer
+        minimum: 0
+        description: Number of no votes
+      abstain:
+        type: integer
+        minimum: 0
+        description: Number of abstentions (not counted as votes in RONR)
+      members:
+        type: array
+        description: Per-member vote breakdown (for roll call votes)
+        items:
+          type: object
+          required:
+            - name
+            - vote
+          properties:
+            name:
+              type: string
+              description: Member name
+            vote:
+              type: string
+              enum:
+                - yes
+                - no
+                - abstain
+              description: How the member voted
+      result:
+        type: string
+        enum:
+          - Carried
+          - Lost
+        description: Outcome of the vote
+    allOf:
+      - if:
+          properties:
+            method:
+              enum:
+                - Unanimous Consent
+        then:
+          required:
+            - result
+          not:
+            anyOf:
+              - required:
+                  - yes
+              - required:
+                  - no
+              - required:
+                  - abstain
+              - required:
+                  - members
+              - required:
+                  - results
+      - if:
+          properties:
+            method:
+              enum:
+                - Voice
+                - Show of Hands
+                - Rising
+        then:
+          required:
+            - result
+          not:
+            anyOf:
+              - required:
+                  - members
+              - required:
+                  - results
+      - if:
+          properties:
+            method:
+              const: Counted Division
+        then:
+          required:
+            - result
+            - yes
+            - no
+          not:
+            anyOf:
+              - required:
+                  - members
+              - required:
+                  - results
+      - if:
+          properties:
+            method:
+              const: Roll Call
+        then:
+          required:
+            - result
+            - members
+          not:
+            anyOf:
+              - required:
+                  - yes
+              - required:
+                  - no
+              - required:
+                  - abstain
+              - required:
+                  - results
+      - if:
+          properties:
+            method:
+              const: Ballot
+        then:
+          required:
+            - result
+          not:
+            anyOf:
+              - required:
+                  - yes
+              - required:
+                  - no
+              - required:
+                  - abstain
+              - required:
+                  - members
+  amendment:
+    type: object
+    description: An amendment to a main motion per RONR §12
+    properties:
+      to_section:
+        type: string
+        description: Section of the motion being amended, if applicable
+      text:
+        type: string
+        description: Wording of the amendment
+      by:
+        type: string
+        description: Member who proposed the amendment
+      seconded_by:
+        type: string
+        description: Member who seconded (optional per RONR)
+      vote:
+        $ref: "#/definitions/vote"
+      result:
+        type: string
+        enum:
+          - Carried
+          - Lost
+        description: Whether the amendment was adopted
+    required:
+      - text
+      - by
+  motion:
+    type: object
+    description: A motion per RONR §4-9
+    required:
+      - text
+      - by
+      - number
+    properties:
+      number:
+        type: integer
+        minimum: 1
+        description: Sequential motion number
+      type:
+        type: string
+        description: Specific RONR motion name in order of precedence
+        enum:
+          - Fix the Time to Adjourn
+          - Adjourn
+          - Take a Recess
+          - Raise a Question of Privilege
+          - Call for the Orders of the Day
+          - Lay on the Table
+          - Previous Question
+          - Limit or Extend Debate
+          - Postpone to a Certain Time
+          - Commit or Refer
+          - Amend
+          - Postpone Indefinitely
+          - Main Motion
+          - Take from the Table
+          - Reconsider
+          - Rescind
+          - Point of Order
+          - Appeal
+          - Suspend the Rules
+          - Division of Assembly
+      text:
+        type: string
+        description: Exact wording of the motion as adopted or rejected
+      by:
+        type: string
+        description: Member who made the motion (recorded per RONR)
+      seconded_by:
+        type: string
+        description: Member who seconded (optional per RONR §4)
+      amendments:
+        type: array
+        description: Amendments to the motion
+        items:
+          $ref: "#/definitions/amendment"
+      vote:
+        $ref: "#/definitions/vote"
+      disposition:
+        type: string
+        enum:
+          - Adopted
+          - Rejected
+          - Referred
+          - Postponed
+          - Tabled
+          - Withdrawn
+          - Lost
+        description: Final disposition of the motion
+      referred_to:
+        type: string
+        description: Committee or body the motion was referred to
+      postponed_to:
+        type: string
+        format: date
+        description: Date the motion was postponed to
+    allOf:
+      - if:
+          required:
+            - disposition
+          properties:
+            disposition:
+              const: Referred
+        then:
+          required:
+            - referred_to
+        else:
+          not:
+            required:
+              - referred_to
+      - if:
+          required:
+            - disposition
+          properties:
+            disposition:
+              const: Postponed
+        then:
+          required:
+            - postponed_to
+        else:
+          not:
+            required:
+              - postponed_to
+  election:
+    type: object
+    description: An election per RONR §46
+    properties:
+      office:
+        type: string
+        description: Title of the office
+      nominees:
+        type: array
+        description: Nominees for the office
+        items:
+          type: object
+          properties:
+            name:
+              type: string
+            nominated_by:
+              type: string
+      vote:
+        $ref: "#/definitions/vote"
+      results:
+        type: object
+        description: Vote counts per candidate
+        additionalProperties:
+          type: integer
+          minimum: 0
+      result:
+        type: string
+        description: Winner(s) of the election
+    required:
+      - office
+      - result

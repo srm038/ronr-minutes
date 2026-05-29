@@ -1,0 +1,5 @@
+{
+  "yaml.schemas": {
+    "minutes.schema.yml": ["*.minutes.yml"]
+  }
+}
