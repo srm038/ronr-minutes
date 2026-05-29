@@ -215,7 +215,7 @@ function renderMotions(motions: any[], indent = ""): string {
         header += ")";
       }
 
-      let text = mot.text;
+      let text = mot.final || mot.text;
       if (!text.endsWith(".")) text += ".";
 
       let line = `${header}: ${text}`;
@@ -243,13 +243,13 @@ function renderMotions(motions: any[], indent = ""): string {
         if (mot.corrections?.length) line += `: ${mot.corrections.join(", ")}`;
       }
 
-      if (mot.amendment) {
-        line += ` Amendment by ${mot.amendment.by}: ${mot.amendment.text}`;
-        if (mot.amendment.disposition)
-          line += ` (${mot.amendment.disposition})`;
-      }
-
       if (!line.endsWith(".")) line += ".";
+
+      const recordableTypes = new Set(["Commit", "Refer", "Limit or Extend Debate", "Previous Question", "Take a Recess", "Adjourn", "Lay on the Table"]);
+      const recordable = mot.secondary?.filter((s: any) => recordableTypes.has(s.type));
+      if (recordable?.length) {
+        line += `\n\n${renderMotions(recordable, indent)}`;
+      }
       return indent + line;
     })
     .join("\n");

@@ -69,7 +69,8 @@ definitions:
           - Previous Question
           - Limit or Extend Debate
           - Postpone to a Certain Time
-          - Commit or Refer
+          - Commit
+          - Refer
           - Amend
           - Postpone Indefinitely
           - Main Motion
@@ -89,26 +90,6 @@ definitions:
       seconded:
         type: boolean
         description: Whether the motion was seconded
-
-  amendment:
-    type: object
-    description: An amendment without results (pre-meeting or placeholder)
-    required:
-      - text
-      - by
-    properties:
-      to_section:
-        type: string
-        description: Section of the motion being amended
-      text:
-        type: string
-        description: Wording of the amendment
-      by:
-        type: string
-        description: Member who proposed the amendment
-      seconded:
-        type: boolean
-        description: Whether the amendment was seconded
 
   minutes_approval:
     type: object

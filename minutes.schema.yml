@@ -381,20 +381,6 @@ definitions:
               - required:
                   - members
 
-  amendment:
-    allOf:
-      - $ref: common.schema.yml#/definitions/amendment
-      - type: object
-        properties:
-          vote:
-            $ref: "#/definitions/vote"
-          result:
-            type: string
-            enum:
-              - Carried
-              - Lost
-            description: Whether the amendment was adopted
-
   motion:
     allOf:
       - $ref: common.schema.yml#/definitions/motion
@@ -402,11 +388,14 @@ definitions:
         required:
           - by
         properties:
-          amendments:
+          secondary:
             type: array
-            description: Amendments to the motion
+            description: Secondary motions (amendments, referrals, etc.) applied while the main motion was pending
             items:
-              $ref: "#/definitions/amendment"
+              $ref: "#/definitions/motion"
+          final:
+            type: string
+            description: Exact wording of the motion as finally adopted or disposed, after all secondary motions are resolved
           vote:
             $ref: "#/definitions/vote"
           disposition:

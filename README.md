@@ -1,50 +1,63 @@
 # ronr-minutes
 
-Meeting minutes conforming to Robert's Rules of Order (RONR). Write minutes in YAML, validate against schema, render to Markdown, convert to PDF.
+Author meeting minutes and agendas in YAML, validate against JSON Schema, render to Markdown + PDF. Dual-schema toolchain with shared definitions where possible; single renderer auto-detects document type.
 
 ## Pipeline
 
 ```
-.minutes.yml  ──→  .minutes.md  ──→  .minutes.pdf
-   (editor)       (yml2md.ts)       (md2pdf.sh)
+.yml ──────────────────→  .md + .pdf
+(editor)                  (yml2md.ts — calls md2pdf.sh internally)
 ```
 
-## Schema
+No intermediate steps needed — `bun yml2md.ts` produces both files in one command.
 
-`minutes.schema.yml` — JSON Schema (draft-07) in YAML format. Covers all RONR §41-48 requirements:
+## Document Types
 
-- Calls to order, opening/closing ceremonies, roll call, quorum
-- Minutes approval (Approved / Approved as Corrected with rules)
-- Reports with motions
-- Unfinished business and new business with motions
-- Votes: Voice, Show of Hands, Rising, Counted Division, Roll Call, Ballot, Unanimous Consent
-- Each vote method enforces required/forbidden fields (e.g., Roll Call requires `members`; Unanimous Consent forbids `yes`/`no`)
-- Adjournment with Adjourn-only motion type constraint
-- Dispositions with conditional `referred_to` / `postponed_to`
+Two document schemas sharing definitions via `common.schema.yml`:
+
+| Type     | Schema              | Sample               | Detection              |
+|----------|---------------------|----------------------|------------------------|
+| Agenda   | `agenda.schema.yml` | `sample.agenda.yml`  | `m.scheduled_start`    |
+| Minutes  | `minutes.schema.yml`| `sample.minutes.yml` | `m.call_to_order`      |
+
+Agenda omits recording fields (`roll_call`, `call_to_order`, `attestation`, `vote`). Minutes extend common definitions with vote, disposition, and conditional logic via `allOf`.
+
+## Editor Setup
+
+Helix (`.helix/languages.toml`) and VS Code (`.vscode/settings.json`) map `*.minutes.yml` → `minutes.schema.yml` and `*.agenda.yml` → `agenda.schema.yml` for yaml-language-server validation on save.
 
 ## Usage
 
-### Validate
-
-Via editor (Helix, VS Code) — yaml-language-server validates against `minutes.schema.yml` on save.
-
-### Convert YAML to Markdown
+### Convert YAML to Markdown + PDF
 
 ```bash
-bun yml2md.ts sample.minutes.yml > sample.minutes.md
+bun yml2md.ts sample.minutes.yml
+bun yml2md.ts sample.agenda.yml
 ```
 
-### Convert Markdown to PDF
+Each command outputs a `.md` and `.pdf` file with the same base name as the input.
 
-```bash
-./md2pdf.sh sample.minutes.md
-```
+### Conversion details
 
-### Full pipeline
+- **Date formatting** — YYYY-MM-DD → "September 17, 2025" (via internal `fmtDate`)
+- **Time formatting** — 24h or 12h input → "6:30 PM" (via internal `fmtTime`)
+- **Agenda header** — `**AGENDA**` (*draft*) with status in lowercase italics
+- **Minutes header** — `**MINUTES**` (*draft*) same format
+- **Status placement** — After AGENDA/MINUTES label in parens
+- **Meeting type** — In parens after date: `June 1, 2026 (Regular)`
 
-```bash
-bun yml2md.ts sample.minutes.yml > sample.minutes.md && ./md2pdf.sh sample.minutes.md
-```
+### Motions
+
+- **`final`** — If present, replaces `text` in the rendered output (captures amended wording)
+- **`secondary`** — Array of motions applied while main motion was pending
+- Recordable secondary motions (displayed when present): `Commit`, `Refer`, `Limit or Extend Debate`, `Previous Question`, `Take a Recess`, `Adjourn`, `Lay on the Table`
+- Other secondary motions (e.g., `Amend`) are tracked in data but not rendered
+
+### Minutes Approval
+
+- **Agenda**: "Minutes of **September 17, 2026** to be approved."
+- **Minutes**: "Minutes of **September 17, 2026** were **Approved**."
+- Common schema (always requires `date`); minutes extends with `result` and conditional `corrections`
 
 ## Requirements
 
@@ -57,49 +70,8 @@ bun yml2md.ts sample.minutes.yml > sample.minutes.md && ./md2pdf.sh sample.minut
 brew bundle
 ```
 
-## Format Reference
+## Schemas
 
-### Minimal minutes
-
-```yaml
-title: Committee Name
-date: 2025-01-15
-status: Draft
-meeting_type: Regular
-calling_to_order:
-  time: 7:00 PM
-  by: Chair
-adjournment:
-  motion:
-    type: Adjourn
-    text: That the meeting adjourn.
-    by: Member
-```
-
-### Motion with vote
-
-```yaml
-motions:
-  - type: Main Motion
-    text: That the budget be approved.
-    by: Member
-    seconded: true
-    vote:
-      method: Voice
-      result: Carried
-```
-
-### Roll call vote
-
-```yaml
-vote:
-  method: Roll Call
-  result: Carried
-  members:
-    - name: Alice
-      vote: yes
-    - name: Bob
-      vote: yes
-    - name: Charlie
-      vote: abstain
-```
+- `common.schema.yml` — Shared definitions: `meeting_metadata`, `ceremony`, `motion`, `minutes_approval`, `election`
+- `agenda.schema.yml` — Agenda-specific properties (`scheduled_start`); no vote/disposition fields
+- `minutes.schema.yml` — Minutes-specific properties (`call_to_order`, `roll_call`, `attestation`); extends motions with `vote`, `disposition`, `final`, `secondary`, `referred_to`, `postponed_to` via `allOf`
