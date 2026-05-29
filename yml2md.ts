@@ -21,6 +21,7 @@ const renderCeremony = (c: any) =>
 
 // Header
 md(`# ${m.title}`);
+if (isAgenda) md("**AGENDA**");
 md(
   `**Date:** ${m.date}${m.status ? `  |  **Status:** ${m.status}` : ""}  |  **Type:** ${m.meeting_type}`,
 );
@@ -172,7 +173,9 @@ if (m.attestation) {
   );
 }
 
-Bun.write(Bun.stdout, out);
+const mdFile = file.replace(/\.yml$/, ".md");
+await Bun.write(mdFile, out);
+Bun.spawnSync(["bash", "md2pdf.sh", mdFile]);
 
 function renderMotions(motions: any[], indent = ""): string {
   return motions
