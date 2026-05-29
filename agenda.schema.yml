@@ -1,0 +1,113 @@
+$schema: http://json-schema.org/draft-07/schema#
+$id: agenda.schema.yml
+title: RONR Agenda
+description: Pre-meeting agenda for meetings conforming to Robert's Rules of Order (RONR) §§41-48
+allOf:
+  - $ref: common.schema.yml#/definitions/meeting_metadata
+type: object
+required:
+  - scheduled_start
+properties:
+  scheduled_start:
+    type: string
+    pattern: ^\d{1,2}:\d{2}(:\d{2})?(\s*[AP]M)?$
+    description: Scheduled start time
+
+  opening_ceremonies:
+    type: array
+    description: Planned opening ceremonies
+    items:
+      $ref: common.schema.yml#/definitions/ceremony
+
+  closing_ceremonies:
+    type: array
+    description: Planned closing ceremonies
+    items:
+      $ref: common.schema.yml#/definitions/ceremony
+
+  reports:
+    type: array
+    description: Scheduled reports
+    items:
+      type: object
+      required:
+        - title
+        - by
+      properties:
+        title:
+          type: string
+          description: Report title
+        by:
+          type: string
+          description: Person or body presenting
+        type:
+          type: string
+          enum:
+            - Officer
+            - Board
+            - Standing Committee
+            - Ad Hoc Committee
+            - Special
+          description: Type of report
+        estimated_time:
+          type: string
+          description: Allocated time for the report
+        attached:
+          type: array
+          items:
+            type: string
+          description: Attached documents
+
+  unfinished_business:
+    type: array
+    description: Unfinished business from previous meeting
+    items:
+      type: object
+      properties:
+        title:
+          type: string
+          description: Item title
+        description:
+          type: string
+          description: Description of the business
+        motions:
+          type: array
+          description: Expected motions
+          items:
+            $ref: common.schema.yml#/definitions/motion
+
+  new_business:
+    type: array
+    description: New business items
+    items:
+      type: object
+      properties:
+        title:
+          type: string
+          description: Item title
+        description:
+          type: string
+          description: Description of the business
+        motions:
+          type: array
+          description: Expected motions
+          items:
+            $ref: common.schema.yml#/definitions/motion
+        elections:
+          type: array
+          description: Scheduled elections
+          items:
+            $ref: common.schema.yml#/definitions/election
+
+  announcements:
+    type: array
+    description: Planned announcements
+    items:
+      type: string
+
+  adjournment:
+    type: object
+    description: Scheduled adjournment
+    properties:
+      motion:
+        $ref: common.schema.yml#/definitions/motion

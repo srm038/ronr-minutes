@@ -1,12 +1,14 @@
 const { parse } = await import("yaml");
 const file = process.argv[2];
 if (!file) {
-  console.error("Usage: bun yml2md.ts <file.minutes.yml>");
+  console.error("Usage: bun yml2md.ts <file>");
   process.exit(1);
 }
 
 const raw = await Bun.file(file).text();
 const m = parse(raw);
+
+const isAgenda = !!m.scheduled_start;
 
 let out = "";
 
@@ -14,22 +16,36 @@ const md = (s: string) => {
   out += s + "\n\n";
 };
 
+const renderCeremony = (c: any) =>
+  [c.by, c.description].filter(Boolean).join(" ");
+
 // Header
 md(`# ${m.title}`);
 md(
-  `**Date:** ${m.date}  |  **Status:** ${m.status}  |  **Type:** ${m.meeting_type}`,
+  `**Date:** ${m.date}${m.status ? `  |  **Status:** ${m.status}` : ""}  |  **Type:** ${m.meeting_type}`,
 );
 
-// Call to Order & Opening Ceremonies
-{
-  let block = `Called to order at **${m.calling_to_order.time}** by ${m.calling_to_order.by}.`;
+// Opening
+if (isAgenda) {
+  let block = `Call to order at **${m.scheduled_start}**.`;
   if (m.opening_ceremonies?.length) {
-    block += `\n`;
-    for (const c of m.opening_ceremonies) {
-      block += `\n${m.opening_ceremonies.length > 1 ? "- " : ""}${c.by} ${c.description}`;
+    const rendered = m.opening_ceremonies.map(renderCeremony).filter(Boolean);
+    if (rendered.length) block += `\n`;
+    for (const r of rendered) {
+      block += `\n${rendered.length > 1 ? "- " : ""}${r}`;
     }
   }
-  md(`## Call to Order\n\n${block}`);
+  md(block);
+} else {
+  let block = `Called to order at **${m.call_to_order.time}** by ${m.call_to_order.by}.`;
+  if (m.opening_ceremonies?.length) {
+    const rendered = m.opening_ceremonies.map(renderCeremony).filter(Boolean);
+    if (rendered.length) block += `\n`;
+    for (const r of rendered) {
+      block += `\n${rendered.length > 1 ? "- " : ""}${r}`;
+    }
+  }
+  md(block);
 }
 
 // Roll Call
@@ -80,10 +96,22 @@ if (m.reports?.length) {
 if (m.unfinished_business?.length) {
   md(`## Unfinished Business`);
   for (const item of m.unfinished_business) {
-    let block = `- **${item.title}**`;
-    if (item.description) block += `: ${item.description}`;
-    if (item.motions?.length)
-      block += `\n\n${renderMotions(item.motions, "    ")}`;
+    let block = "";
+    if (item.title && item.description) {
+      block = `- **${item.title}**: ${item.description}`;
+      if (item.motions?.length)
+        block += `\n\n${renderMotions(item.motions, "    ")}`;
+    } else if (item.description) {
+      block = `- ${item.description}`;
+      if (item.motions?.length)
+        block += `\n\n${renderMotions(item.motions, "    ")}`;
+    } else if (item.title) {
+      block = `- **${item.title}**`;
+      if (item.motions?.length)
+        block += `\n\n${renderMotions(item.motions, "    ")}`;
+    } else if (item.motions?.length) {
+      block = renderMotions(item.motions, "- ");
+    }
     md(block);
   }
 }
@@ -92,10 +120,22 @@ if (m.unfinished_business?.length) {
 if (m.new_business?.length) {
   md(`## New Business`);
   for (const item of m.new_business) {
-    let block = `- **${item.title}**`;
-    if (item.description) block += `: ${item.description}`;
-    if (item.motions?.length)
-      block += `\n\n${renderMotions(item.motions, "    ")}`;
+    let block = "";
+    if (item.title && item.description) {
+      block = `- **${item.title}**: ${item.description}`;
+      if (item.motions?.length)
+        block += `\n\n${renderMotions(item.motions, "    ")}`;
+    } else if (item.description) {
+      block = `- ${item.description}`;
+      if (item.motions?.length)
+        block += `\n\n${renderMotions(item.motions, "    ")}`;
+    } else if (item.title) {
+      block = `- **${item.title}**`;
+      if (item.motions?.length)
+        block += `\n\n${renderMotions(item.motions, "    ")}`;
+    } else if (item.motions?.length) {
+      block = renderMotions(item.motions, "- ");
+    }
     md(block);
   }
 }
@@ -113,9 +153,12 @@ if (m.announcements?.length) {
     let block = "";
     if (a.motion) block += renderMotions([a.motion]);
     if (m.closing_ceremonies?.length) {
-      if (block) block += `\n`;
-      for (const c of m.closing_ceremonies) {
-        block += `\n${m.closing_ceremonies.length > 1 ? "- " : ""}${c.by} ${c.description}`;
+      const rendered = m.closing_ceremonies.map(renderCeremony).filter(Boolean);
+      if (rendered.length) {
+        if (block) block += `\n`;
+        for (const r of rendered) {
+          block += `\n${rendered.length > 1 ? "- " : ""}${r}`;
+        }
       }
     }
     md(`## Adjournment\n\n${block}`);
@@ -134,10 +177,12 @@ Bun.write(Bun.stdout, out);
 function renderMotions(motions: any[], indent = ""): string {
   return motions
     .map((mot) => {
-      let header = `**${mot.type || "Motion"}**`;
-      header += ` (${mot.by}`;
-      if (mot.seconded) header += `, *seconded*`;
-      header += ")";
+      let header = `**${mot.type || "Main Motion"}**`;
+      if (mot.by) {
+        header += ` (${mot.by}`;
+        if (mot.seconded) header += `, *seconded*`;
+        header += ")";
+      }
 
       let text = mot.text;
       if (!text.endsWith(".")) text += ".";

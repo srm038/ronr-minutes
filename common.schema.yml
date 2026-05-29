@@ -1,0 +1,131 @@
+$schema: http://json-schema.org/draft-07/schema#
+$id: common.schema.yml
+title: RONR Common Definitions
+description: Shared definitions for minutes and agenda schemas
+type: object
+
+definitions:
+  meeting_metadata:
+    type: object
+    required:
+      - title
+      - date
+      - meeting_type
+    properties:
+      title:
+        type: string
+        description: Name of the organization
+      date:
+        type: string
+        pattern: ^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2})?)?(Z|[+-]\d{2}:\d{2})?$
+        description: Date (YYYY-MM-DD) or ISO 8601 datetime of the meeting
+      meeting_type:
+        type: string
+        enum:
+          - Regular
+          - Special
+          - Annual
+          - Adjourned
+          - Executive Session
+        description: Type of meeting per RONR
+      location:
+        type: string
+        description: Physical or virtual location
+      status:
+        type: string
+        enum:
+          - Draft
+          - Approved
+        description: Document status
+
+  ceremony:
+    type: object
+    description: A ceremony or ritual item (prayer, pledge, invocation, etc.)
+    properties:
+      by:
+        type: string
+        description: Person who led the ceremony
+      description:
+        type: string
+        description: Notes about the ceremony
+
+  motion:
+    type: object
+    description: A motion without results (pre-meeting or placeholder)
+    required:
+      - text
+    properties:
+      type:
+        type: string
+        default: Main Motion
+        description: Specific RONR motion name in order of precedence
+        enum:
+          - Fix the Time to Adjourn
+          - Adjourn
+          - Take a Recess
+          - Raise a Question of Privilege
+          - Call for the Orders of the Day
+          - Lay on the Table
+          - Previous Question
+          - Limit or Extend Debate
+          - Postpone to a Certain Time
+          - Commit or Refer
+          - Amend
+          - Postpone Indefinitely
+          - Main Motion
+          - Take from the Table
+          - Reconsider
+          - Rescind
+          - Point of Order
+          - Appeal
+          - Suspend the Rules
+          - Division of Assembly
+      text:
+        type: string
+        description: Exact wording of the motion
+      by:
+        type: string
+        description: Member who made the motion
+      seconded:
+        type: boolean
+        description: Whether the motion was seconded
+
+  amendment:
+    type: object
+    description: An amendment without results (pre-meeting or placeholder)
+    required:
+      - text
+      - by
+    properties:
+      to_section:
+        type: string
+        description: Section of the motion being amended
+      text:
+        type: string
+        description: Wording of the amendment
+      by:
+        type: string
+        description: Member who proposed the amendment
+      seconded:
+        type: boolean
+        description: Whether the amendment was seconded
+
+  election:
+    type: object
+    description: An election without results
+    required:
+      - office
+    properties:
+      office:
+        type: string
+        description: Title of the office
+      nominees:
+        type: array
+        description: Nominees for the office
+        items:
+          type: object
+          properties:
+            name:
+              type: string
+            nominated_by:
+              type: string
