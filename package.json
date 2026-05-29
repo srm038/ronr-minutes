@@ -1,6 +1,5 @@
 {
-  "name": "minutes-tooling",
-  "module": "index.ts",
+  "name": "ronr-minutes",
   "type": "module",
   "private": true,
   "devDependencies": {
@@ -10,11 +9,6 @@
     "typescript": "^5"
   },
   "dependencies": {
-    "date-fns": "^4.1.0",
-    "remark-frontmatter": "^5.0.0",
-    "remark-parse": "^11.0.0",
-    "unified": "^11.0.5",
-    "yaml": "^2.8.1",
-    "zod": "^4.1.13"
+    "yaml": "^2.8.1"
   }
 }

@@ -121,6 +121,9 @@ properties:
           by:
             type: string
             description: Member who moved approval
+          seconded:
+            type: boolean
+            description: Whether the motion was seconded
           vote:
             $ref: "#/definitions/vote"
         required:
@@ -232,19 +235,18 @@ properties:
   adjournment:
     type: object
     description: Adjournment per RONR §41
-    required:
-      - time
     properties:
-      time:
-        type: string
-        pattern: ^\d{1,2}:\d{2}(:\d{2})?(\s*[AP]M)?$
-        description: Time of adjournment
-      by:
-        type: string
-        description: Person who declared the meeting adjourned
-      next_meeting:
-        type: string
-        description: Date or description of the next meeting
+      motion:
+        $ref: "#/definitions/motion"
+    if:
+      required: [motion]
+    then:
+      properties:
+        motion:
+          properties:
+            type:
+              const: Adjourn
+          required: [type]
   attestation:
     type: object
     description: Secretary's attestation
@@ -287,7 +289,7 @@ definitions:
           - Roll Call
           - Ballot
           - Unanimous Consent
-        default: voice
+        default: Voice
         description: Method of voting
       yes:
         type: integer
@@ -328,6 +330,7 @@ definitions:
         description: Outcome of the vote
     allOf:
       - if:
+          required: [method]
           properties:
             method:
               enum:
@@ -348,6 +351,7 @@ definitions:
               - required:
                   - results
       - if:
+          required: [method]
           properties:
             method:
               enum:
@@ -364,6 +368,7 @@ definitions:
               - required:
                   - results
       - if:
+          required: [method]
           properties:
             method:
               const: Counted Division
@@ -379,6 +384,7 @@ definitions:
               - required:
                   - results
       - if:
+          required: [method]
           properties:
             method:
               const: Roll Call
@@ -397,6 +403,7 @@ definitions:
               - required:
                   - results
       - if:
+          required: [method]
           properties:
             method:
               const: Ballot
@@ -426,9 +433,9 @@ definitions:
       by:
         type: string
         description: Member who proposed the amendment
-      seconded_by:
-        type: string
-        description: Member who seconded (optional per RONR)
+      seconded:
+        type: boolean
+        description: Whether the motion was seconded (recorded per RONR; not who)
       vote:
         $ref: "#/definitions/vote"
       result:
@@ -446,12 +453,7 @@ definitions:
     required:
       - text
       - by
-      - number
     properties:
-      number:
-        type: integer
-        minimum: 1
-        description: Sequential motion number
       type:
         type: string
         description: Specific RONR motion name in order of precedence
@@ -482,9 +484,9 @@ definitions:
       by:
         type: string
         description: Member who made the motion (recorded per RONR)
-      seconded_by:
-        type: string
-        description: Member who seconded (optional per RONR §4)
+      seconded:
+        type: boolean
+        description: Whether the motion was seconded (recorded per RONR; not who)
       amendments:
         type: array
         description: Amendments to the motion
