@@ -8,7 +8,9 @@ type: object
 required:
   - status
   - call_to_order
-  - adjournment
+anyOf:
+  - required: [adjournment]
+  - required: [recess]
 not:
   required:
     - scheduled_start
@@ -212,6 +214,22 @@ properties:
           properties:
             type:
               const: Adjourn
+          required: [type]
+
+  recess:
+    type: object
+    description: Recess (meeting suspended to continue later)
+    properties:
+      motion:
+        $ref: "#/definitions/motion"
+    if:
+      required: [motion]
+    then:
+      properties:
+        motion:
+          properties:
+            type:
+              const: Take a Recess
           required: [type]
   attestation:
     type: object

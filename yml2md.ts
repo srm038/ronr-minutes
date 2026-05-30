@@ -174,13 +174,18 @@ if (m.announcements?.length) {
   for (const a of m.announcements) md(`- ${a}`);
 }
 
-// Adjournment & Closing Ceremonies
+// Recess & Adjournment & Closing Ceremonies
 {
-  const a = m.adjournment;
-  if (a.motion || m.closing_ceremonies?.length) {
+  const hasRecess = !!m.recess?.motion;
+  const hasAdj = !!m.adjournment?.motion;
+  const hasCeremonies = m.closing_ceremonies?.length;
+  const motions = [];
+  if (hasRecess) motions.push(m.recess.motion);
+  if (hasAdj) motions.push(m.adjournment.motion);
+  if (motions.length || hasCeremonies) {
     let block = "";
-    if (a.motion) block += renderMotions([a.motion]);
-    if (m.closing_ceremonies?.length) {
+    if (motions.length) block += renderMotions(motions);
+    if (hasCeremonies) {
       const rendered = m.closing_ceremonies.map(renderCeremony).filter(Boolean);
       if (rendered.length) {
         if (block) block += `\n`;
