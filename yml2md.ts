@@ -52,6 +52,25 @@ if (isAgenda) {
 }
 md(`**Date:** ${fmtDate(m.date)} (${m.meeting_type})`);
 
+// Roll Call
+if (m.roll_call) {
+  if (m.roll_call.officers_present?.length) {
+    md(
+      `**Officers Present:** ${m.roll_call.officers_present.map((o: any) => `${o.name} (${o.office})`).join(", ")}`,
+    );
+  }
+  if (m.roll_call.members_present?.length) {
+    md(`**Members Present:** ${m.roll_call.members_present.join(", ")}`);
+  }
+  if (m.roll_call.members_absent?.length) {
+    md(`**Members Absent:** ${m.roll_call.members_absent.join(", ")}`);
+  }
+  if (m.roll_call.guests?.length) {
+    md(`**Guests:** ${m.roll_call.guests.join(", ")}`);
+  }
+  md(`A quorum was ${m.roll_call.quorum ? "" : "not "}present.`);
+}
+
 // Opening
 if (isAgenda) {
   let block = `Call to order at **${fmtTime(m.scheduled_start)}**.`;
@@ -73,26 +92,6 @@ if (isAgenda) {
     }
   }
   md(block);
-}
-
-// Roll Call
-if (m.roll_call) {
-  md(`## Roll Call`);
-  if (m.roll_call.officers_present?.length) {
-    md(
-      `**Officers Present:** ${m.roll_call.officers_present.map((o: any) => `${o.name} (${o.office})`).join(", ")}`,
-    );
-  }
-  if (m.roll_call.members_present?.length) {
-    md(`**Members Present:** ${m.roll_call.members_present.join(", ")}`);
-  }
-  if (m.roll_call.members_absent?.length) {
-    md(`**Members Absent:** ${m.roll_call.members_absent.join(", ")}`);
-  }
-  if (m.roll_call.guests?.length) {
-    md(`**Guests:** ${m.roll_call.guests.join(", ")}`);
-  }
-  md(`A quorum was ${m.roll_call.quorum ? "" : "not "}present.`);
 }
 
 // Minutes Approval
@@ -190,7 +189,7 @@ if (m.announcements?.length) {
         }
       }
     }
-    md(`## Adjournment\n\n${block}`);
+    md(block);
   }
 }
 
